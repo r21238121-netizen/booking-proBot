@@ -29,11 +29,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Обработчик ошибок"""
-    logger.error(msg="Произошла ошибка при обработке обновления", exc_info=context.error)
-
-
 def main():
     """Основная функция запуска бота"""
     # Создание таблиц в базе данных
@@ -53,38 +48,13 @@ def main():
     application.add_handler(CallbackQueryHandler(checkout_handler, pattern="^checkout$"))
     application.add_handler(CallbackQueryHandler(cart_handler, pattern="^show_cart$"))
     application.add_handler(CallbackQueryHandler(catalog_handler, pattern="^show_catalog$"))
-    application.add_handler(CallbackQueryHandler(order_detail_handler, pattern="^order_detail_"))
-    application.add_handler(CallbackQueryHandler(main_menu_handler, pattern="^main_menu$"))
     
     # Обработчики сообщений (теперь правильно подключены как асинхронные)
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_messages))
     
-    # Регистрация обработчика ошибок
-    application.add_error_handler(error_handler)
-    
     # Запуск бота
     logger.info("Запуск бота...")
     application.run_polling()
-
-
-async def main_menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик возврата в главное меню"""
-    query = update.callback_query
-    await query.answer()
-    
-    user_id = query.from_user.id
-    is_admin = user_id in ADMIN_IDS
-    
-    if is_admin:
-        await query.edit_message_text(
-            "Выберите действие из меню администратора:",
-            reply_markup=get_admin_menu_keyboard()
-        )
-    else:
-        await query.edit_message_text(
-            "Выберите действие из главного меню:",
-            reply_markup=get_main_menu_keyboard()
-        )
 
 
 async def handle_text_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -124,36 +94,6 @@ async def handle_text_messages(update: Update, context: ContextTypes.DEFAULT_TYP
                 "Выберите действие из главного меню:",
                 reply_markup=get_main_menu_keyboard()
             )
-
-
-async def handle_my_orders(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик просмотра моих заказов"""
-    await update.message.reply_text("📦 Ваши заказы:\n\nПока что у вас нет оформленных заказов.")
-
-
-async def handle_support(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик поддержки"""
-    await update.message.reply_text("📞 Служба поддержки:\n\nНапишите нам @florabot_support")
-
-
-async def handle_new_orders(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик просмотра новых заказов (для администраторов)"""
-    await update.message.reply_text("📋 Новые заказы:\n\nНовых заказов пока нет.")
-
-
-async def handle_manage_catalog(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик управления каталогом (для администраторов)"""
-    await update.message.reply_text("📝 Управление каталогом:\n\nЗдесь вы можете добавить или изменить букеты.")
-
-
-async def handle_statistics(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик статистики (для администраторов)"""
-    await update.message.reply_text("📊 Статистика:\n\nЗдесь отображается статистика продаж.")
-
-
-async def handle_admin_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик настроек администратора"""
-    await update.message.reply_text("⚙️ Настройки администратора:\n\nЗдесь вы можете настроить параметры бота.")
 
 
 if __name__ == '__main__':

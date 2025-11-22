@@ -11,4 +11,4 @@ class User(SQLModel, table=True):
     last_name: Optional[str] = None
     username: Optional[str] = None
     is_admin: bool = False
-    created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
+    created_at: str  # В оригинальной модели не было значения по умолчанию
