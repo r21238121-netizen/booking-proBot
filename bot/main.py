@@ -52,7 +52,15 @@ async def process_city(message: Message, state: FSMContext):
     if not message.text or message.text == "📍 Отправить город":
         await message.answer("Пожалуйста, введите название города вручную:")
         return
-    await state.update_data(city=message.text.strip())
+    
+    city = message.text.strip()
+    
+    # Валидация города
+    if not city.replace(" ", "").replace("-", "").replace(".", "").isalnum() or len(city) < 2 or len(city) > 50:
+        await message.answer("Некорректное название города. Введите реальный город (2-50 символов, без специальных символов):")
+        return
+        
+    await state.update_data(city=city)
     await message.answer("Выберите услуги:", reply_markup=service_choice_kb())
     await state.set_state(MasterApplication.waiting_for_services)
 
@@ -79,12 +87,31 @@ async def process_service(callback: CallbackQuery, state: FSMContext):
 
 @router.message(MasterApplication.waiting_for_portfolio)
 async def process_portfolio(message: Message, state: FSMContext):
-    await state.update_data(portfolio=message.text.strip())
+    portfolio = message.text.strip()
+    
+    # Валидация портфолио
+    if len(portfolio) > 100:
+        await message.answer("Слишком длинная ссылка. Введите корректную ссылку (до 100 символов):")
+        return
+    
+    # Проверка на валидность URL или "Нет"
+    if portfolio.lower() != "нет" and not portfolio.startswith(("http://", "https://", "t.me/", "@")):
+        await message.answer("Введите корректную ссылку на ваш Telegram-канал или напишите «Нет»:")
+        return
+    
+    await state.update_data(portfolio=portfolio)
     await message.answer("Где вы о нас узнали? (например: «Из Telegram», «От друга» и т.д.)")
     await state.set_state(MasterApplication.waiting_for_source)
 
 @router.message(MasterApplication.waiting_for_source)
 async def process_source(message: Message, state: FSMContext):
+    source = message.text.strip()
+    
+    # Валидация источника
+    if len(source) < 2 or len(source) > 100 or not source.replace(" ", "").replace("-", "").replace(".", "").replace(",", "").isalnum():
+        await message.answer("Некорректный источник. Введите от 2 до 100 символов (без специальных символов):")
+        return
+    
     data = await state.get_data()
     conn = get_db()
     cur = conn.cursor()
@@ -92,7 +119,7 @@ async def process_source(message: Message, state: FSMContext):
         cur.execute("""
             INSERT INTO applications (user_id, city, portfolio_url, source)
             VALUES (?, ?, ?, ?)
-        """, (message.from_user.id, data["city"], data["portfolio"], message.text.strip()))
+        """, (message.from_user.id, data["city"], data["portfolio"], source))
         conn.commit()
         await message.answer("✅ Спасибо! Вашу заявку рассмотрят в течение 48 часов.")
     except sqlite3.IntegrityError:

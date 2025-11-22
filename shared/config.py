@@ -2,7 +2,7 @@
 import os
 
 # Токен твоего бота
-BOT_TOKEN = "8228009184:AAFkXJcGZhV_s74bXxOubfPbn0KFVsFm-to"
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8228009184:AAFkXJcGZhV_s74bXxOubfPbn0KFVsFm-to")
 
 # Твой ID — суперадмин
 SUPER_ADMIN_ID = 7223040599
