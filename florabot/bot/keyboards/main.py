@@ -44,6 +44,6 @@ def get_cart_keyboard(cart_items):
         ])
     
     keyboard.append([InlineKeyboardButton("✅ Оформить заказ", callback_data="checkout")])
-    keyboard.append([InlineKeyboardButton("◀️ Назад в меню", callback_data="main_menu")])
+    keyboard.append([InlineKeyboardButton("◀️ Назад в каталог", callback_data="show_catalog")])
     
     return InlineKeyboardMarkup(keyboard)

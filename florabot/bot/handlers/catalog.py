@@ -8,23 +8,27 @@ from sqlmodel import select
 
 async def catalog_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик команды просмотра каталога"""
-    # В реальном приложении получаем букеты из базы данных
-    # Пока что создадим тестовые данные
-    test_bouquets = [
-        Bouquet(id=1, name="Красные розы", description="Классические красные розы", price=3500, available=True),
-        Bouquet(id=2, name="Белые тюльпаны", description="Элегантные белые тюльпаны", price=2500, available=True),
-        Bouquet(id=3, name="Микс цветов", description="Смешанный букет из свежих цветов", price=4200, available=True),
-        Bouquet(id=4, name="Желтые хризантемы", description="Яркие желтые хризантемы", price=2800, available=True),
-        Bouquet(id=5, name="Свадебный букет", description="Элегантный свадебный букет", price=6500, available=True),
-        Bouquet(id=6, name="Розы 101 шт.", description="101 красная роза", price=15000, available=True)
-    ]
-    
-    keyboard = get_catalog_keyboard(test_bouquets)
-    
-    await update.message.reply_text(
-        "💐 Выберите букет из каталога:",
-        reply_markup=keyboard
-    )
+    try:
+        # В реальном приложении получаем букеты из базы данных
+        # Пока что создадим тестовые данные
+        test_bouquets = [
+            Bouquet(id=1, name="Красные розы", description="Классические красные розы", price=3500, available=True),
+            Bouquet(id=2, name="Белые тюльпаны", description="Элегантные белые тюльпаны", price=2500, available=True),
+            Bouquet(id=3, name="Микс цветов", description="Смешанный букет из свежих цветов", price=4200, available=True),
+            Bouquet(id=4, name="Желтые хризантемы", description="Яркие желтые хризантемы", price=2800, available=True),
+            Bouquet(id=5, name="Свадебный букет", description="Элегантный свадебный букет", price=6500, available=True),
+            Bouquet(id=6, name="Розы 101 шт.", description="101 красная роза", price=15000, available=True)
+        ]
+        
+        keyboard = get_catalog_keyboard(test_bouquets)
+        
+        await update.message.reply_text(
+            "💐 Выберите букет из каталога:",
+            reply_markup=keyboard
+        )
+    except Exception as e:
+        logging.error(f"Ошибка при обработке команды каталога: {e}")
+        await update.message.reply_text("Произошла ошибка при загрузке каталога. Пожалуйста, попробуйте позже.")
 
 
 async def bouquet_detail_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):

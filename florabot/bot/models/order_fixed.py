@@ -16,7 +16,7 @@ class OrderStatus(str, Enum):
 class Order(SQLModel, table=True):
     """Модель заказа"""
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id")
+    user_id: int = Field(foreign_key="user.telegram_id")  # Исправленный формат внешнего ключа
     status: OrderStatus = OrderStatus.NEW
     total_price: int  # Цена в копейках
     delivery_address: str
