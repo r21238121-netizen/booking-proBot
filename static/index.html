@@ -205,13 +205,13 @@
 
         const list = document.getElementById("masters-list");
         if (masters.length === 0) {
-          list.innerHTML = `<p>Нет мастеров в ${city} по услуге "${service}".</p>`;
+          list.innerHTML = `<p>Нет мастеров в ${escapeHtml(city)} по услуге "${escapeHtml(service)}".</p>`;
         } else {
           list.innerHTML = masters.map(m => `
-            <div class="master-item" onclick="showSlots(${m.id}, '${m.name}')">
-              <strong>${m.name}</strong>
-              <div>📍 ${m.address}</div>
-              <div>⭐ ${m.rating.toFixed(1)} (${m.review_count})</div>
+            <div class="master-item" onclick="showSlots(${parseInt(m.id)}, '${escapeHtml(m.name)}')">
+              <strong>${escapeHtml(m.name)}</strong>
+              <div>📍 ${escapeHtml(m.address)}</div>
+              <div>⭐ ${parseFloat(m.rating).toFixed(1)} (${parseInt(m.review_count)})</div>
             </div>
           `).join("");
         }
@@ -219,8 +219,8 @@
         // Загружаем рекламу
         const adRes = await fetch(`${API_URL}/api/ad`);
         const ad = await adRes.json();
-        document.getElementById("ad-banner").innerText = ad.text;
-        window.AD_URL = ad.url;
+        document.getElementById("ad-banner").innerText = escapeHtml(ad.text);
+        window.AD_URL = escapeHtml(ad.url);
 
         document.getElementById("step1").classList.add("hidden");
         document.getElementById("step2").classList.remove("hidden");
@@ -228,6 +228,16 @@
         alert("Ошибка загрузки мастеров");
         console.error(e);
       }
+    }
+
+    // Функция для экранирования HTML
+    function escapeHtml(unsafe) {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
 
     function openAd() {

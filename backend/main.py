@@ -10,8 +10,8 @@ app = FastAPI(title="Booking Pro API")
 # Разрешаем запросы из Telegram WebApp
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_origins=["https://t.me", "https://web.telegram.org"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -86,7 +86,7 @@ def book_slot(payload: dict):
         slot_dt = datetime.fromisoformat(slot)
         if slot_dt <= datetime.now():
             raise HTTPException(400, "Время в прошлом")
-    except:
+    except ValueError:
         raise HTTPException(400, "Неверный формат времени")
 
     conn = get_db()
@@ -97,6 +97,9 @@ def book_slot(payload: dict):
             VALUES (?, ?, ?)
         """, (client_id, master_id, slot))
         conn.commit()
+    except sqlite3.IntegrityError as e:
+        conn.close()
+        raise HTTPException(409, f"Конфликт записи: {e}")
     except Exception as e:
         conn.close()
         raise HTTPException(500, f"Ошибка записи: {e}")
