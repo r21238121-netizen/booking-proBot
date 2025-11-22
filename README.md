@@ -141,3 +141,152 @@ python -m bot.main
 ---
 
 ✅ **Итог**: TonLucky — это не просто казино, а **социальная игровая экосистема на TON**, сочетающая развлечение, коллекционирование, турниры и микро-монетизацию.
+
+# Production Deployment Guide
+
+This guide will help you deploy the TonLucky Telegram casino bot in a production environment.
+
+## 🚀 Quick Start with Docker
+
+### 1. Environment Setup
+First, copy the example environment file and fill in your values:
+```bash
+cp .env .env.production
+```
+
+Edit `.env.production` and set your values:
+- `BOT_TOKEN`: Your Telegram bot token
+- `DATABASE_URL`: PostgreSQL connection string
+- `REDIS_URL`: Redis connection string
+- `TON_WALLET_ADDRESS`: Your TON wallet address for deposits/withdrawals
+- `SECRET_KEY`: A long, random secret key
+- `JWT_SECRET`: A long, random JWT secret
+
+### 2. Run with Docker Compose
+```bash
+# Build and start the services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f bot
+```
+
+## 🛠️ Manual Deployment
+
+### 1. Prerequisites
+- Python 3.11+
+- PostgreSQL 12+
+- Redis 6+
+- TON Connect API key (optional)
+
+### 2. Setup Instructions
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd tonlucky
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variables in .env file
+cp .env .env.production
+
+# Run the bot
+python -m bot.main
+```
+
+### 3. Using the Startup Script
+```bash
+# Make the script executable
+chmod +x start.sh
+
+# Run the bot
+./start.sh
+```
+
+## 📁 Project Structure
+```
+/workspace/
+├── bot/                    # Main bot source code
+│   ├── main.py            # Main bot entry point
+│   ├── config.py          # Configuration settings
+│   ├── handlers/          # Bot command handlers
+│   ├── database/          # Database models and connection
+│   ├── games/             # Game implementations
+│   └── keyboards/         # Inline keyboards
+├── .env                   # Environment variables
+├── requirements.txt       # Python dependencies
+├── Dockerfile            # Docker configuration
+├── docker-compose.yml    # Docker Compose configuration
+└── start.sh              # Production startup script
+```
+
+## 🛡️ Security Best Practices
+
+1. **Environment Variables**: Never commit `.env` files to version control
+2. **Secret Keys**: Use strong, randomly generated keys for SECRET_KEY and JWT_SECRET
+3. **Database**: Use strong passwords and restrict database access
+4. **Redis**: Configure authentication and restrict access
+5. **Bot Token**: Keep your bot token secure
+
+## 📊 Monitoring & Logging
+
+- Logs are stored in the `logs/` directory when using Docker
+- Configure log rotation based on your needs
+- Monitor database connections and Redis usage
+- Set up alerts for critical errors
+
+## 🔧 Configuration Options
+
+### Game Settings
+- `DICE_MIN_BET` / `DICE_MAX_BET`: Minimum and maximum bet amounts for dice game
+- `DICE_MULTIPLIER`: Multiplier for dice game wins
+- `MAX_BET_AMOUNT`: Maximum bet allowed across all games
+
+### Limits
+- `MAX_WITHDRAWAL_PER_DAY`: Maximum TON withdrawal per day
+- `WITHDRAWAL_FEE_PERCENT`: Percentage fee for withdrawals
+- `MIN_DEPOSIT_AMOUNT`: Minimum deposit amount
+
+### TON Network
+- `TON_NETWORK`: Set to "mainnet" for production, "testnet" for testing
+- `TON_WALLET_ADDRESS`: Your TON wallet address for deposits/withdrawals
+
+## 🚨 Troubleshooting
+
+### Common Issues
+1. **Database Connection**: Ensure PostgreSQL is running and accessible
+2. **Redis Connection**: Check Redis is running and URL is correct
+3. **Bot Token**: Verify your bot token is correct and bot is not banned
+4. **Environment Variables**: Make sure all required environment variables are set
+
+### Checking Status
+```bash
+# Docker containers status
+docker-compose ps
+
+# View bot logs
+docker-compose logs bot
+
+# Check database connection
+docker-compose exec postgres psql -U tonlucky_user -d tonlucky -c "SELECT 1;"
+```
+
+## 🔄 Updates
+
+To update the bot:
+1. Pull the latest code
+2. Update dependencies if needed: `pip install -r requirements.txt`
+3. Restart the bot service
+
+## 📞 Support
+
+For issues or questions, please check:
+- The logs for error messages
+- Ensure all environment variables are properly set
+- Database and Redis are accessible
+- Bot token is valid and the bot is not restricted
