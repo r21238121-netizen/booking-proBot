@@ -24,17 +24,29 @@ FloraBot - это Telegram-бот, который позволяет польз�
 pip install -r requirements.txt
 ```
 
-2. Создайте файл `.env` и укажите токен бота и ID администраторов:
+2. Получите токен бота:
+   - Напишите @BotFather в Telegram
+   - Используйте команду `/newbot` чтобы создать нового бота
+   - Скопируйте токен который он вам выдаст
+
+3. Создайте файл `.env` в корне проекта и укажите токен бота и ID администраторов:
 ```env
-BOT_TOKEN=your_telegram_bot_token_here
-ADMIN_IDS=123456789,987654321
+BOT_TOKEN=ваш_настоящий_токен_бота_из_BotFather
+ADMIN_IDS=ваш_telegram_id
 DATABASE_URL=sqlite:///./florabot.db
 ```
 
-3. Запустите бота:
-```bash
-python -m bot.main
-```
+4. Запустите бота одним из способов:
+
+   **Способ 1 (рекомендуется):**
+   ```bash
+   python run_bot.py
+   ```
+
+   **Способ 2:**
+   ```bash
+   python -m bot.main
+   ```
 
 ## Структура проекта
 
