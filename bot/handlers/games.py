@@ -6,6 +6,8 @@ from decimal import Decimal
 
 from keyboards.main_menu import get_main_menu_keyboard
 from games.dice import DiceGame
+from database.models import create_user_if_not_exists, get_user_balance
+from config import settings
 
 router = Router()
 
@@ -19,6 +21,22 @@ class GameStates(StatesGroup):
 @router.callback_query(lambda c: c.data == 'game_dice')
 async def game_dice_start(callback_query: CallbackQuery, state: FSMContext):
     """Start the TonDice game"""
+    # Get database pool from dispatcher
+    pool = callback_query.bot.get('db_pool')
+    if not pool:
+        await callback_query.answer("Ошибка подключения к базе данных", show_alert=True)
+        return
+    
+    # Create or update user in database
+    user = callback_query.from_user
+    await create_user_if_not_exists(
+        pool, 
+        user.id, 
+        user.username, 
+        user.first_name, 
+        user.last_name
+    )
+    
     await callback_query.answer()
     await callback_query.message.edit_text(
         "🎲 <b>TonDice</b>\n\n"
@@ -32,6 +50,14 @@ async def process_dice_bet(message: Message, state: FSMContext):
     """Process the dice bet amount"""
     try:
         bet_amount = Decimal(message.text.replace(',', '.'))
+        
+        # Validate bet amount
+        if bet_amount < Decimal(str(settings.DICE_MIN_BET)):
+            await message.answer(f"Минимальная ставка: {settings.DICE_MIN_BET} фишек")
+            return
+        if bet_amount > Decimal(str(settings.DICE_MAX_BET)):
+            await message.answer(f"Максимальная ставка: {settings.DICE_MAX_BET} фишек")
+            return
         
         # Store bet amount in state
         await state.update_data(bet_amount=bet_amount)
@@ -58,6 +84,20 @@ async def process_dice_number(message: Message, state: FSMContext):
         # Get stored bet amount
         data = await state.get_data()
         bet_amount = data['bet_amount']
+        
+        # Get database pool from dispatcher
+        pool = message.bot.get('db_pool')
+        if not pool:
+            await message.answer("Ошибка подключения к базе данных")
+            return
+        
+        # Check user balance
+        user_balance = await get_user_balance(pool, message.from_user.id)
+        if user_balance < bet_amount:
+            await message.answer("Недостаточно средств на балансе")
+            await state.clear()
+            await message.answer("Используйте главное меню для продолжения игры.", reply_markup=get_main_menu_keyboard())
+            return
         
         # Play the dice game
         dice_game = DiceGame()

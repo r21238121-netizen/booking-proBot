@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: tonlucky_postgres
+    environment:
+      POSTGRES_DB: tonlucky
+      POSTGRES_USER: tonlucky_user
+      POSTGRES_PASSWORD: tonlucky_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tonlucky_user -d tonlucky"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: tonlucky_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  bot:
+    build: .
+    container_name: tonlucky_bot
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - ENVIRONMENT=production
+    env_file:
+      - .env
+    restart: unless-stopped
+    volumes:
+      - ./logs:/workspace/logs
+
+volumes:
+  postgres_data:
+  redis_data:

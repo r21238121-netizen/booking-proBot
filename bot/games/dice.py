@@ -2,8 +2,8 @@ import random
 from typing import Dict, Any
 from decimal import Decimal
 
-from database.models import get_user_balance, update_user_balance
-from database.database import get_db_connection
+from database.models import get_user_balance, update_user_balance, record_game_result
+from database.database import get_db_pool
 
 
 class DiceGame:
@@ -44,8 +44,10 @@ class DiceGame:
                 'message': f'Максимальная ставка: {self.max_bet}'
             }
         
+        # Get database pool
+        pool = await get_db_pool()
+        
         # Get user balance
-        pool = await get_db_connection()
         user_balance = await get_user_balance(pool, user_id)
         
         if user_balance < bet_amount:
@@ -55,7 +57,12 @@ class DiceGame:
             }
         
         # Deduct bet amount from user balance
-        await update_user_balance(pool, user_id, bet_amount, is_win=False)
+        success = await update_user_balance(pool, user_id, bet_amount, is_win=False)
+        if not success:
+            return {
+                'success': False,
+                'message': 'Ошибка при списании средств'
+            }
         
         # Roll the dice
         rolled_number = random.randint(1, 6)
@@ -69,11 +76,11 @@ class DiceGame:
             'chosen_number': chosen_number,
             'is_win': is_win,
             'bet_amount': bet_amount,
-            'win_amount': 0
+            'win_amount': Decimal('0')
         }
         
         if is_win:
-            win_amount = bet_amount * self.multiplier
+            win_amount = bet_amount * Decimal(str(self.multiplier))
             result['win_amount'] = win_amount
             
             # Add win amount to user balance
@@ -84,12 +91,15 @@ class DiceGame:
             result['message'] = f'😞 Увы! Выпало {rolled_number}, вы поставили на {chosen_number}. Повезет в следующий раз!'
         
         # Store game result in database
-        async with pool.acquire() as conn:
-            await conn.execute("""
-                INSERT INTO games (game_type, user_id, bet_amount, win_amount, game_result, is_win)
-                VALUES ($1, $2, $3, $4, $5, $6)
-            """, 'dice', user_id, bet_amount, result['win_amount'], 
-            {'rolled_number': rolled_number, 'chosen_number': chosen_number}, is_win)
+        await record_game_result(
+            pool, 
+            'dice', 
+            user_id, 
+            bet_amount, 
+            result['win_amount'], 
+            {'rolled_number': rolled_number, 'chosen_number': chosen_number}, 
+            is_win
+        )
         
         return result
 
